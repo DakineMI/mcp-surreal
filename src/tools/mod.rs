@@ -229,6 +229,8 @@ pub struct SurrealService {
     pub tool_router: ToolRouter<Self>,
     /// Cloud client for SurrealDB Cloud operations
     pub cloud_client: Arc<Client>,
+    /// Whether SurrealDB Cloud tools are enabled (default: false)
+    pub enable_cloud_tools: bool,
 }
 
 #[tool_router]
@@ -258,6 +260,7 @@ impl SurrealService {
             connected_at: Instant::now(),
             tool_router: Self::tool_router(),
             cloud_client: Arc::new(Client::new()),
+            enable_cloud_tools: false,
         }
     }
 
@@ -274,6 +277,9 @@ impl SurrealService {
     /// * `database` - The database to use (optional)
     /// * `user` - Username for authentication (optional)
     /// * `pass` - Password for authentication (optional)
+    /// * `access_token` - Cloud access token (optional)
+    /// * `refresh_token` - Cloud refresh token (optional)
+    /// * `enable_cloud_tools` - Whether to enable cloud tools (default: false)
     #[allow(clippy::too_many_arguments)]
     pub fn with_config(
         connection_id: String,
@@ -284,6 +290,7 @@ impl SurrealService {
         pass: Option<String>,
         access_token: Option<String>,
         refresh_token: Option<String>,
+        enable_cloud_tools: bool,
     ) -> Self {
         // Output debugging information
         info!(
@@ -322,6 +329,7 @@ impl SurrealService {
             connected_at: Instant::now(),
             tool_router: Self::tool_router(),
             cloud_client,
+            enable_cloud_tools,
         }
     }
 
@@ -942,6 +950,13 @@ Examples:
         &self,
         _params: Parameters<CloudParams>,
     ) -> Result<CallToolResult, McpError> {
+        // Check if cloud tools are enabled
+        if !self.enable_cloud_tools {
+            return Err(McpError::internal_error(
+                "SurrealDB Cloud tools are disabled. Set SURREAL_MCP_ENABLE_CLOUD_TOOLS=true to enable them.",
+                None,
+            ));
+        }
         // Increment tool usage counter
         counter!("surrealmcp.tools.list_cloud_organizations").increment(1);
         // Output debugging information
@@ -985,6 +1000,13 @@ Examples:
         &self,
         params: Parameters<CloudOrganizationParams>,
     ) -> Result<CallToolResult, McpError> {
+        // Check if cloud tools are enabled
+        if !self.enable_cloud_tools {
+            return Err(McpError::internal_error(
+                "SurrealDB Cloud tools are disabled. Set SURREAL_MCP_ENABLE_CLOUD_TOOLS=true to enable them.",
+                None,
+            ));
+        }
         let CloudOrganizationParams { organization_id } = params.0;
         // Increment tool usage counter
         counter!("surrealmcp.tools.list_cloud_instances").increment(1);

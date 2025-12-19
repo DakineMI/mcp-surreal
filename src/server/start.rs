@@ -41,6 +41,7 @@ pub struct ServerConfig {
     pub auth_audience: String,
     pub cloud_access_token: Option<String>,
     pub cloud_refresh_token: Option<String>,
+    pub enable_cloud_tools: bool,
 }
 
 // Global metrics
@@ -135,6 +136,7 @@ async fn start_stdio_server(config: ServerConfig) -> Result<()> {
         pass,
         cloud_access_token,
         cloud_refresh_token,
+        config.enable_cloud_tools,
     );
     // Initialize the connection using startup configuration
     if let Err(e) = service.initialize_connection().await {
@@ -257,6 +259,7 @@ async fn start_unix_server(config: ServerConfig) -> Result<()> {
                 pass,
                 cloud_access_token,
                 cloud_refresh_token,
+                enable_cloud_tools,
             );
             // Initialize the connection using startup configuration only if endpoint is specified
             if let Err(e) = service.initialize_connection().await {
@@ -366,6 +369,7 @@ async fn start_http_server(config: ServerConfig) -> Result<()> {
     // Create a session manager for the HTTP server
     let session_manager = Arc::new(LocalSessionManager::default());
     // Create a new SurrealDB service instance for the HTTP server
+    let enable_cloud_tools = config.enable_cloud_tools;
     let mcp_service = StreamableHttpService::new(
         move || {
             Ok(SurrealService::with_config(
@@ -377,6 +381,7 @@ async fn start_http_server(config: ServerConfig) -> Result<()> {
                 pass.clone(),
                 cloud_access_token.clone(),
                 cloud_refresh_token.clone(),
+                enable_cloud_tools,
             ))
         },
         session_manager,
@@ -482,6 +487,7 @@ mod tests {
             auth_audience: "https://custom.audience.com/".to_string(),
             cloud_access_token: None,
             cloud_refresh_token: None,
+            enable_cloud_tools: false,
         };
 
         // Create a simple router to test the discovery endpoint

@@ -28,6 +28,8 @@ async fn main() -> Result<()> {
     match cli.command {
         cli::Commands::Start {
             endpoint,
+            storage_type,
+            project_name,
             ns,
             db,
             user,
@@ -42,12 +44,19 @@ async fn main() -> Result<()> {
             auth_audience,
             cloud_access_token,
             cloud_refresh_token,
+            enable_cloud_tools,
         } => {
+            // Determine namespace: use storage_type if provided, otherwise fall back to ns
+            let namespace = storage_type.as_ref().map(|st| st.as_str().to_string()).or(ns);
+            
+            // Determine database: use project_name if provided, otherwise fall back to db
+            let database = project_name.or(db);
+            
             // Create the server config
             let config = ServerConfig {
                 endpoint,
-                ns,
-                db,
+                ns: namespace,
+                db: database,
                 user,
                 pass,
                 server_url,
@@ -60,6 +69,7 @@ async fn main() -> Result<()> {
                 auth_audience,
                 cloud_access_token,
                 cloud_refresh_token,
+                enable_cloud_tools,
             };
             server::start_server(config).await
         }

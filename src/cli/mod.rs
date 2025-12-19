@@ -1,4 +1,22 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
+
+/// Storage type for namespace organization
+#[derive(Debug, Clone, ValueEnum)]
+pub enum StorageType {
+    /// Agent memory storage for AI agent state
+    AgentMemory,
+    /// Recipe storage for reusable workflows
+    Recipes,
+}
+
+impl StorageType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            StorageType::AgentMemory => "AGENT_MEMORY",
+            StorageType::Recipes => "RECIPES",
+        }
+    }
+}
 
 #[derive(Parser)]
 #[command(name = "surrealmcp")]
@@ -16,10 +34,16 @@ pub enum Commands {
         /// The SurrealDB endpoint URL to connect to
         #[arg(short, long, env = "SURREALDB_URL")]
         endpoint: Option<String>,
-        /// The SurrealDB namespace to use
+        /// Storage type for namespace (AGENT_MEMORY, RECIPES, etc.)
+        #[arg(long, env = "SURREALDB_STORAGE_TYPE", value_enum)]
+        storage_type: Option<StorageType>,
+        /// Project name that maps to the database name
+        #[arg(long, env = "SURREALDB_PROJECT_NAME")]
+        project_name: Option<String>,
+        /// The SurrealDB namespace to use (deprecated: use --storage-type instead)
         #[arg(long, env = "SURREALDB_NS")]
         ns: Option<String>,
-        /// The SurrealDB database to use
+        /// The SurrealDB database to use (deprecated: use --project-name instead)
         #[arg(long, env = "SURREALDB_DB")]
         db: Option<String>,
         /// The SurrealDB username to use
@@ -70,5 +94,8 @@ pub enum Commands {
         /// SurrealDB Cloud refresh token (used instead of fetching tokens)
         #[arg(long, env = "SURREAL_MCP_CLOUD_REFRESH_TOKEN")]
         cloud_refresh_token: Option<String>,
+        /// Enable SurrealDB Cloud tools (default: false to prevent accidental calls)
+        #[arg(long, env = "SURREAL_MCP_ENABLE_CLOUD_TOOLS", default_value = "false")]
+        enable_cloud_tools: bool,
     },
 }
