@@ -186,6 +186,7 @@ async fn start_unix_server(config: ServerConfig) -> Result<()> {
         socket_path,
         cloud_access_token,
         cloud_refresh_token,
+        enable_cloud_tools,
         ..
     } = config;
     // Get the specified socket path
